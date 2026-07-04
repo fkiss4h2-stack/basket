@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로페셔널 3점슛 챔피언십</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Inter & Noto Sans KR) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background-color: #0b0f19;
+            user-select: none;
+        }
+        /* Custom scrollbar for modern feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col items-center justify-between p-2 md:p-6 overflow-x-hidden">
+
+    <!-- Header Area -->
+    <header class="w-full max-w-5xl flex flex-col md:flex-row items-center justify-between gap-4 py-3 px-4 bg-gray-900/80 border border-gray-800 rounded-2xl shadow-2xl backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl shadow-lg shadow-orange-500/20 animate-pulse">
+                <i class="fa-solid fa-basketball text-2xl text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-300">
+                    PRO 3-POINT CHAMPIONSHIP
+                </h1>
+                <p class="text-xs text-gray-400">20년차 개발자의 정밀 물리 엔진 탑재</p>
+            </div>
+        </div>
+        
+        <!-- Scoreboard Displays -->
+        <div class="flex items-center gap-4 text-center">
+            <div class="bg-gray-950 px-4 py-2 rounded-xl border border-gray-800">
+                <span class="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">최고 점수</span>
+                <span id="high-score-display" class="text-xl font-extrabold text-yellow-400 tracking-wider">0</span>
+            </div>
+            <div class="bg-gray-950 px-4 py-2 rounded-xl border border-gray-800">
+                <span class="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">현재 점수</span>
+                <span id="score-display" class="text-xl font-extrabold text-orange-500 tracking-wider">0</span>
+            </div>
+            <div class="bg-gray-950 px-4 py-2 rounded-xl border border-gray-800">
+                <span class="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">세트 진행도</span>
+                <div class="flex gap-1 mt-1 justify-center" id="shots-bullets">
+                    <!-- Bullet visualizers for 5 shots -->
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-700"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-700"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-700"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-700"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-700"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Section -->
+    <main class="w-full max-w-5xl my-4 grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
+        
+        <!-- Game Canvas Area (3 cols wide on large screens) -->
+        <div class="lg:col-span-3 flex flex-col gap-3">
+            <div class="relative w-full aspect-[16/9] min-h-[300px] md:min-h-[420px] bg-slate-950 rounded-2xl border-2 border-gray-800 shadow-2xl overflow-hidden group">
+                <!-- Status/Alert overlays -->
+                <div id="game-overlay-message" class="absolute inset-0 bg-black/60 flex flex-col justify-center items-center gap-4 opacity-0 pointer-events-none transition-all duration-300 z-10">
+                    <h2 id="overlay-title" class="text-4xl md:text-5xl font-extrabold tracking-wider text-orange-500 transform scale-75 transition-transform duration-300">SWISH!</h2>
+                    <p id="overlay-sub" class="text-lg text-gray-300"></p>
+                </div>
+
+                <!-- Canvas Component -->
+                <canvas id="game-canvas" class="w-full h-full block bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950"></canvas>
+                
+                <!-- Guideline Toggle Float -->
+                <div class="absolute top-4 left-4 bg-gray-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-gray-800 text-xs flex items-center gap-2">
+                    <span class="text-gray-400">조준 가이드라인</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="guideline-toggle" checked class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                    </label>
+                </div>
+
+                <!-- Quick Tutorial/State Float -->
+                <div class="absolute bottom-4 left-4 bg-gray-950/80 backdrop-blur px-3 py-1.5 rounded-lg border border-gray-800 text-xs flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse"></span>
+                    <span id="canvas-status-text" class="text-gray-300">슈터 준비 완료 (3점슛 라인 고정)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Dashboard Side Panel -->
+        <div class="lg:col-span-1 flex flex-col justify-between gap-4 p-5 bg-gray-900/80 border border-gray-800 rounded-2xl shadow-xl backdrop-blur-md">
+            
+            <div class="flex flex-col gap-5">
+                <h3 class="text-md font-bold text-gray-300 border-b border-gray-800 pb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-orange-500"></i> 물리 제어 콘솔
+                </h3>
+                
+                <!-- 1. Angle Adjustment (30 to 70 deg, step 5) -->
+                <div class="flex flex-col gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400 font-semibold">슈팅 각도</span>
+                        <span id="angle-val-badge" class="px-2 py-0.5 bg-orange-500/20 text-orange-400 border border-orange-500/30 rounded text-xs font-bold">45°</span>
+                    </div>
+                    <div class="grid grid-cols-5 gap-1">
+                        <!-- Direct buttons for angle to fit requirements beautifully -->
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 rounded border border-gray-700 transition-colors" data-angle="30">30°</button>
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 rounded border border-gray-700 transition-colors" data-angle="35">35°</button>
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 rounded border border-gray-700 transition-colors" data-angle="40">40°</button>
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-orange-600 text-white rounded border border-orange-500 transition-colors" data-angle="45">45°</button>
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 rounded border border-gray-700 transition-colors" data-angle="50">50°</button>
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 rounded border border-gray-700 transition-colors" data-angle="55">55°</button>
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 rounded border border-gray-700 transition-colors" data-angle="60">60°</button>
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 rounded border border-gray-700 transition-colors" data-angle="65">65°</button>
+                        <button type="button" class="angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 rounded border border-gray-700 transition-colors" data-angle="70">70°</button>
+                        <span class="text-[9px] text-gray-500 flex items-center justify-center font-bold">5°간격</span>
+                    </div>
+                    <!-- Slide Input for Angle -->
+                    <input type="range" id="angle-slider" min="30" max="70" step="5" value="45" class="w-full accent-orange-500 bg-gray-800 rounded-lg cursor-pointer h-1.5 mt-2">
+                </div>
+
+                <!-- 2. Power Level Adjustment (5 levels) -->
+                <div class="flex flex-col gap-2 mt-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400 font-semibold">슈팅 파워 (힘 조절)</span>
+                        <span id="power-val-badge" class="px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded text-xs font-bold">LV. 3</span>
+                    </div>
+                    <!-- Discrete Power levels -->
+                    <div class="grid grid-cols-5 gap-1.5" id="power-buttons-container">
+                        <button type="button" class="power-btn py-2 text-sm font-black bg-gray-800 hover:bg-amber-500 border border-gray-700 rounded-lg transition-colors flex flex-col items-center gap-1" data-power="1">
+                            <span>1</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                        </button>
+                        <button type="button" class="power-btn py-2 text-sm font-black bg-gray-800 hover:bg-amber-500 border border-gray-700 rounded-lg transition-colors flex flex-col items-center gap-1" data-power="2">
+                            <span>2</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                        </button>
+                        <button type="button" class="power-btn py-2 text-sm font-black bg-amber-600 text-white border border-amber-500 rounded-lg transition-colors flex flex-col items-center gap-1" data-power="3">
+                            <span>3</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                        </button>
+                        <button type="button" class="power-btn py-2 text-sm font-black bg-gray-800 hover:bg-amber-500 border border-gray-700 rounded-lg transition-colors flex flex-col items-center gap-1" data-power="4">
+                            <span>4</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                        </button>
+                        <button type="button" class="power-btn py-2 text-sm font-black bg-gray-800 hover:bg-amber-500 border border-gray-700 rounded-lg transition-colors flex flex-col items-center gap-1" data-power="5">
+                            <span>5</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-gray-600"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. Dynamic Stats View -->
+                <div class="bg-gray-950 p-3 rounded-xl border border-gray-800/80 space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">슈팅 위치:</span>
+                        <span class="text-teal-400 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-location-dot"></i> 3점슛 라인 고정
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">현재 슈팅 세트:</span>
+                        <span id="current-shot-status" class="text-gray-300 font-bold">1번째 슛 / 총 5회</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">세트당 성공률:</span>
+                        <span id="success-rate-status" class="text-orange-400 font-bold">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Shoot Button & Set Actions -->
+            <div class="flex flex-col gap-2 mt-4">
+                <button type="button" id="shoot-btn" class="w-full py-4 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white font-black text-lg rounded-xl shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-basketball-hoop"></i> 3점슛 던지기! (SPACE)
+                </button>
+                <button type="button" id="reset-btn" class="w-full py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs rounded-xl transition-all">
+                    경기 초기화
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Instruction Board / Footer -->
+    <footer class="w-full max-w-5xl py-4 px-5 bg-gray-900/40 border border-gray-800 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-400">
+        <div class="flex flex-col md:flex-row gap-4 md:gap-8 text-center md:text-left">
+            <div>
+                <span class="text-gray-300 font-bold block mb-1">🎮 조작 가이드</span>
+                <p>마우스 클릭 조절 외에 키보드 조작도 지원합니다.</p>
+                <p class="text-[11px] text-gray-500 mt-0.5">• <kbd class="px-1 py-0.5 bg-gray-800 rounded">←</kbd> <kbd class="px-1 py-0.5 bg-gray-800 rounded">→</kbd> 키 : 각도 5도씩 조절 | <kbd class="px-1 py-0.5 bg-gray-800 rounded">1</kbd>~<kbd class="px-1 py-0.5 bg-gray-800 rounded">5</kbd> 키 : 파워 조절 | <kbd class="px-1 py-0.5 bg-gray-800 rounded">Space</kbd> : 슈팅</p>
+            </div>
+            <div>
+                <span class="text-gray-300 font-bold block mb-1">📐 정밀 물리 힌트</span>
+                <p>각도 30°~35°는 빨라 힘 조절 2~3이 잘 맞고, 각도 50°~60° 고각은 힘 조절 4가 유리합니다.</p>
+                <p class="text-[11px] text-gray-500 mt-0.5">최적의 궤적을 찾고 5번의 슛 모두 클린 "스위시" 골에 성공해 보세요!</p>
+            </div>
+        </div>
+        <div class="text-center md:text-right border-t md:border-t-0 border-gray-800 pt-2 md:pt-0 w-full md:w-auto">
+            <span class="text-gray-500 block">Copyright 2026. Senior Developer & Basketball Fan.</span>
+            <span class="text-orange-500 font-semibold">Web Audio Synth-Sfx Engine Loaded.</span>
+        </div>
+    </footer>
+
+    <!-- Script Engine Core -->
+    <script>
+        // ----------------------------------------------------
+        // Sound Synthesis Engine (Web Audio API)
+        // ----------------------------------------------------
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            // Synthesized shooting sound
+            playShoot() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(350, this.ctx.currentTime + 0.15);
+                
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+
+            // Synthesized wall/backboard bounce sound (deep wood hit)
+            playBounce() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.15);
+                
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            // Synthesized metallic rim impact
+            playRim() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(500, this.ctx.currentTime + 0.1);
+                
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(920, this.ctx.currentTime);
+                osc2.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.1);
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                
+                osc.connect(gain);
+                osc2.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start();
+                osc2.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+                osc2.stop(this.ctx.currentTime + 0.15);
+            }
+
+            // Synthesized Net SWISH sound using noise
+            playSwish() {
+                this.init();
+                if (!this.ctx) return;
+                // Create custom White Noise Buffer
+                const bufferSize = this.ctx.sampleRate * 0.3; // 300ms
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                // Dynamic Bandpass Filter to emulate net swipe
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1000, this.ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.25);
+                filter.Q.value = 4.0;
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 0.3);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start();
+                noise.stop(this.ctx.currentTime + 0.3);
+            }
+
+            // Crowd Cheer Sound effect
+            playCheer() {
+                this.init();
+                if (!this.ctx) return;
+                const duration = 1.5;
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(500, this.ctx.currentTime);
+                filter.Q.value = 1.0;
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.12, this.ctx.currentTime + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start();
+                noise.stop(this.ctx.currentTime + duration);
+            }
+
+            // Double Oscillator Game Buzzer sound
+            playBuzzer() {
+                this.init();
+                if (!this.ctx) return;
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc1.type = 'sawtooth';
+                osc1.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc2.type = 'sawtooth';
+                osc2.frequency.setValueAtTime(124, this.ctx.currentTime); // Beat frequency
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 0.6);
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc1.start();
+                osc2.start();
+                osc1.stop(this.ctx.currentTime + 0.6);
+                osc2.stop(this.ctx.currentTime + 0.6);
+            }
+        }
+
+        const sfx = new SoundEngine();
+
+        // ----------------------------------------------------
+        // Game Engine Elements & Constants
+        // ----------------------------------------------------
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Dynamic viewport responsive scale settings
+        let scaleX = 1;
+        let scaleY = 1;
+        const BASE_WIDTH = 800;
+        const BASE_HEIGHT = 450;
+
+        // Custom Graphics Dimensions
+        const FLOOR_Y = 380;
+        const THREE_POINT_X = 180; // Fixed 3-point shoot position
+
+        // Hoop and net coordinates (Golden Ratio proportions)
+        const BACKBOARD_X = 720;
+        const BACKBOARD_Y_START = 120;
+        const BACKBOARD_Y_END = 230;
+        const RIM_Y = 190;
+        const RIM_X_LEFT = 640;
+        const RIM_X_RIGHT = 685;
+        const NET_DEPTH = 35;
+
+        // Physics variables
+        const GRAVITY = 0.22; // Natural gravity curve
+        const BALL_RADIUS = 11;
+
+        // Game Configuration Rules
+        const MAX_SHOTS_PER_SET = 5;
+
+        // ----------------------------------------------------
+        // Game State Variables
+        // ----------------------------------------------------
+        let angle = 45; // Shooting Angle (30 to 70 deg)
+        let powerLevel = 3; // Shooting Power level (1 to 5)
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('bball_high_score')) || 0;
+        
+        let currentSetShotCount = 0; // Current shot within the 5-shot set
+        let setSuccessHistory = []; // Tracks O/X success for bullets [true, false, etc.]
+        let showGuideline = true;
+
+        // Shooter Joint details
+        const shooterHand = { x: THREE_POINT_X + 15, y: 310 };
+
+        // Dynamic Ball Structure
+        let ball = {
+            x: shooterHand.x,
+            y: shooterHand.y,
+            vx: 0,
+            vy: 0,
+            active: false,
+            spin: 0,
+            isBounced: false,
+            passedNetTop: false,
+            hasScored: false,
+            particles: []
+        };
+
+        // Text Feedback effect stack
+        let floatingTexts = [];
+
+        // ----------------------------------------------------
+        // Control & UI Bindings
+        // ----------------------------------------------------
+        const angleSlider = document.getElementById('angle-slider');
+        const angleValBadge = document.getElementById('angle-val-badge');
+        const powerValBadge = document.getElementById('power-val-badge');
+        const shootBtn = document.getElementById('shoot-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const guidelineToggle = document.getElementById('guideline-toggle');
+        const scoreDisplay = document.getElementById('score-display');
+        const highScoreDisplay = document.getElementById('high-score-display');
+        const currentShotStatus = document.getElementById('current-shot-status');
+        const successRateStatus = document.getElementById('success-rate-status');
+        const canvasStatusText = document.getElementById('canvas-status-text');
+        
+        // HTML Overlay refs
+        const gameOverlay = document.getElementById('game-overlay-message');
+        const overlayTitle = document.getElementById('overlay-title');
+        const overlaySub = document.getElementById('overlay-sub');
+
+        highScoreDisplay.textContent = highScore;
+
+        // Map Level 1-5 to Physics Velocities
+        // Velocity scales carefully built to make various angle combos possible.
+        function getVelocityByPower(level, angleDeg) {
+            // Precise velocity factors optimized for 3-point distance
+            // level 1 to 5 mapping:
+            const baseVelocities = {
+                1: 7.6,
+                2: 8.8,
+                3: 10.1,
+                4: 11.2,
+                5: 12.4
+            };
+            return baseVelocities[level] || 10.0;
+        }
+
+        // Apply visual active states to Controls
+        function updateControlsUI() {
+            // Update Angle slider value
+            angleSlider.value = angle;
+            angleValBadge.textContent = `${angle}°`;
+
+            // Style direct angle buttons
+            document.querySelectorAll('.angle-btn').forEach(btn => {
+                const btnAngle = parseInt(btn.dataset.angle);
+                if (btnAngle === angle) {
+                    btn.className = "angle-btn py-1 text-xs font-bold bg-orange-600 text-white rounded border border-orange-500 transition-colors";
+                } else {
+                    btn.className = "angle-btn py-1 text-xs font-bold bg-gray-800 hover:bg-orange-500 text-slate-100 rounded border border-gray-700 transition-colors";
+                }
+            });
+
+            // Style power buttons
+            powerValBadge.textContent = `LV. ${powerLevel}`;
+            document.querySelectorAll('.power-btn').forEach(btn => {
+                const btnPower = parseInt(btn.dataset.power);
+                const bullet = btn.querySelector('span:last-child');
+                if (btnPower === powerLevel) {
+                    btn.className = "power-btn py-2 text-sm font-black bg-amber-600 text-white border border-amber-500 rounded-lg transition-colors flex flex-col items-center gap-1";
+                    bullet.className = "w-1.5 h-1.5 rounded-full bg-white animate-pulse";
+                } else {
+                    btn.className = "power-btn py-2 text-sm font-black bg-gray-800 hover:bg-amber-500 text-slate-100 border border-gray-700 rounded-lg transition-colors flex flex-col items-center gap-1";
+                    bullet.className = "w-1.5 h-1.5 rounded-full bg-gray-600";
+                }
+            });
+
+            // Bullet displays for shots tracker
+            const bulletContainer = document.getElementById('shots-bullets');
+            bulletContainer.innerHTML = '';
+            for (let i = 0; i < MAX_SHOTS_PER_SET; i++) {
+                const dot = document.createElement('span');
+                if (i < setSuccessHistory.length) {
+                    if (setSuccessHistory[i]) {
+                        // Success -> Glowing Orange Bullet
+                        dot.className = "w-3 h-3 rounded-full bg-orange-500 shadow-md shadow-orange-500/50 flex items-center justify-center text-[7px] font-bold text-white";
+                        dot.innerHTML = "O";
+                    } else {
+                        // Fail -> Dark grey bullet
+                        dot.className = "w-3 h-3 rounded-full bg-red-600 flex items-center justify-center text-[7px] font-bold text-white";
+                        dot.innerHTML = "X";
+                    }
+                } else {
+                    // Not shot yet
+                    dot.className = "w-3 h-3 rounded-full bg-gray-700 border border-gray-600";
+                }
+                bulletContainer.appendChild(dot);
+            }
+
+            // General Info board
+            currentShotStatus.textContent = `${Math.min(currentSetShotCount + 1, MAX_SHOTS_PER_SET)}번째 슛 / 총 ${MAX_SHOTS_PER_SET}회`;
+            const successes = setSuccessHistory.filter(x => x).length;
+            const percentage = currentSetShotCount > 0 ? Math.round((successes / currentSetShotCount) * 100) : 0;
+            successRateStatus.textContent = `${percentage}%`;
+        }
+
+        // ----------------------------------------------------
+        // Event Listeners Registration
+        // ----------------------------------------------------
+        
+        // Angle sliders/buttons events
+        angleSlider.addEventListener('input', (e) => {
+            angle = parseInt(e.target.value);
+            updateControlsUI();
+        });
+
+        document.querySelectorAll('.angle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                angle = parseInt(btn.dataset.angle);
+                updateControlsUI();
+                sfx.init(); // Warm audio context
+            });
+        });
+
+        // Power buttons events
+        document.querySelectorAll('.power-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                powerLevel = parseInt(btn.dataset.power);
+                updateControlsUI();
+                sfx.init(); // Warm audio context
+            });
+        });
+
+        // Guideline Toggle
+        guidelineToggle.addEventListener('change', (e) => {
+            showGuideline = e.target.checked;
+        });
+
+        // Shoot Button Event Trigger
+        shootBtn.addEventListener('click', () => {
+            triggerShoot();
+        });
+
+        // Reset Button
+        resetBtn.addEventListener('click', () => {
+            resetEntireGame();
+        });
+
+        // Keyboard Controls
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                triggerShoot();
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                angle = Math.max(30, angle - 5);
+                updateControlsUI();
+            } else if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                angle = Math.min(70, angle + 5);
+                updateControlsUI();
+            } else if (['1', '2', '3', '4', '5'].includes(e.key)) {
+                powerLevel = parseInt(e.key);
+                updateControlsUI();
+            }
+        });
+
+        // ----------------------------------------------------
+        // Physics Helpers
+        // ----------------------------------------------------
+        function getLaunchVectors() {
+            // standard coordinates: angle is up relative to ground.
+            // Converting degrees to radians
+            const radians = (angle * Math.PI) / 180;
+            const velocityMagnitude = getVelocityByPower(powerLevel, angle);
+            
+            // X moves right, Y moves up (negative value on standard canvas layout)
+            const vx = velocityMagnitude * Math.cos(radians);
+            const vy = -velocityMagnitude * Math.sin(radians);
+            return { vx, vy };
+        }
+
+        function triggerShoot() {
+            if (ball.active) return; // Wait until current shot lands/concludes
+            
+            // End of Set safety check
+            if (currentSetShotCount >= MAX_SHOTS_PER_SET) {
+                showSetEndOverlay();
+                return;
+            }
+
+            sfx.playShoot();
+            
+            const vectors = getLaunchVectors();
+            ball.x = shooterHand.x;
+            ball.y = shooterHand.y;
+            ball.vx = vectors.vx;
+            ball.vy = vectors.vy;
+            ball.active = true;
+            ball.spin = 0;
+            ball.isBounced = false;
+            ball.passedNetTop = false;
+            ball.hasScored = false;
+            ball.particles = [];
+
+            currentSetShotCount++;
+            canvasStatusText.textContent = `슈팅 비행 중! (${currentSetShotCount}/${MAX_SHOTS_PER_SET})`;
+            
+            // Subtle layout update
+            updateControlsUI();
+        }
+
+        // ----------------------------------------------------
+        // Core Physics Collision Loop
+        // ----------------------------------------------------
+        function checkCollisions() {
+            if (!ball.active) return;
+
+            // Apply air resistance and gravity
+            ball.vy += GRAVITY;
+            ball.spin += 0.08; // visual spin effect
+
+            // Particle tracking for hot air fire tail
+            if (Math.random() < 0.4) {
+                ball.particles.push({
+                    x: ball.x,
+                    y: ball.y,
+                    r: Math.random() * 4 + 2,
+                    alpha: 0.8,
+                    color: ball.hasScored ? '56, 189, 248' : '249, 115, 22' // Blue fire when score, orange normal
+                });
+            }
+
+            let nextX = ball.x + ball.vx;
+            let nextY = ball.y + ball.vy;
+
+            // --- A. Floor Collision ---
+            if (nextY + BALL_RADIUS >= FLOOR_Y) {
+                ball.y = FLOOR_Y - BALL_RADIUS;
+                ball.vy = -ball.vy * 0.48; // restitution
+                ball.vx *= 0.65; // floor friction
+                ball.isBounced = true;
+                
+                if (Math.abs(ball.vy) < 0.5) {
+                    ball.vy = 0;
+                }
+                sfx.playBounce();
+                checkShotTermination();
+                return;
+            }
+
+            // --- B. Backboard Collision (Vertical Segments) ---
+            // Width representation of backboard line
+            if (nextX + BALL_RADIUS >= BACKBOARD_X - 4 && ball.x - BALL_RADIUS <= BACKBOARD_X) {
+                if (nextY >= BACKBOARD_Y_START && nextY <= BACKBOARD_Y_END) {
+                    // Bounce left
+                    ball.x = BACKBOARD_X - BALL_RADIUS - 5;
+                    ball.vx = -ball.vx * 0.55;
+                    ball.vy *= 0.85;
+                    sfx.playBounce();
+                    ball.isBounced = true;
+                    addImpactParticles(ball.x + BALL_RADIUS, ball.y, 'rgba(255,255,255,0.7)');
+                    return;
+                }
+            }
+
+            // --- C. Rim Point Circle Collisions (Left & Right Tip) ---
+            // Left rim edge (RIM_X_LEFT)
+            const distLeft = Math.hypot(nextX - RIM_X_LEFT, nextY - RIM_Y);
+            if (distLeft < BALL_RADIUS) {
+                // Elastic point reflection
+                const nx = (nextX - RIM_X_LEFT) / distLeft;
+                const ny = (nextY - RIM_Y) / distLeft;
+                const dotProduct = ball.vx * nx + ball.vy * ny;
+                
+                ball.vx = (ball.vx - 2 * dotProduct * nx) * 0.6;
+                ball.vy = (ball.vy - 2 * dotProduct * ny) * 0.6;
+                ball.x = RIM_X_LEFT + nx * BALL_RADIUS;
+                ball.y = RIM_Y + ny * BALL_RADIUS;
+                sfx.playRim();
+                ball.isBounced = true;
+                addImpactParticles(RIM_X_LEFT, RIM_Y, '#f97316');
+                return;
+            }
+
+            // Right rim edge (RIM_X_RIGHT)
+            const distRight = Math.hypot(nextX - RIM_X_RIGHT, nextY - RIM_Y);
+            if (distRight < BALL_RADIUS) {
+                const nx = (nextX - RIM_X_RIGHT) / distRight;
+                const ny = (nextY - RIM_Y) / distRight;
+                const dotProduct = ball.vx * nx + ball.vy * ny;
+                
+                ball.vx = (ball.vx - 2 * dotProduct * nx) * 0.6;
+                ball.vy = (ball.vy - 2 * dotProduct * ny) * 0.6;
+                ball.x = RIM_X_RIGHT + nx * BALL_RADIUS;
+                ball.y = RIM_Y + ny * BALL_RADIUS;
+                sfx.playRim();
+                ball.isBounced = true;
+                addImpactParticles(RIM_X_RIGHT, RIM_Y, '#f97316');
+                return;
+            }
+
+            // --- D. Goal Check inside Net cylinder ---
+            // Net lies strictly between RIM_X_LEFT and RIM_X_RIGHT
+            // Ball must pass downwards from top of rim
+            if (ball.x > RIM_X_LEFT && ball.x < RIM_X_RIGHT) {
+                // Check if ball passed downward through rim level
+                if (ball.y < RIM_Y && nextY >= RIM_Y) {
+                    ball.passedNetTop = true;
+                }
+                
+                // Once ball is passing through net going downwards
+                if (ball.passedNetTop && ball.vy > 0 && !ball.hasScored) {
+                    triggerGoal();
+                }
+            }
+
+            // --- E. Net friction deceleration ---
+            if (ball.hasScored && ball.y > RIM_Y && ball.y < RIM_Y + NET_DEPTH) {
+                // Drag net dampener
+                ball.vx *= 0.82;
+                ball.vy *= 0.92;
+            }
+
+            // Apply movements
+            ball.x = nextX;
+            ball.y = nextY;
+
+            // --- F. Out of screen safety bounds ---
+            if (ball.x - BALL_RADIUS > canvas.width || ball.x + BALL_RADIUS < 0) {
+                checkShotTermination();
+            }
+        }
+
+        // ----------------------------------------------------
+        // Goal Scoring & Feedback Handler
+        // ----------------------------------------------------
+        function triggerGoal() {
+            ball.hasScored = true;
+            sfx.playSwish();
+            
+            // Determine Swish quality
+            let message = "SWISH! 🏀";
+            let color = "#10b981"; // Emerald
+            let scoreAdd = 3;
+
+            if (ball.isBounced) {
+                message = "GOOD BOUNCE!";
+                color = "#fb923c"; // Orange
+                scoreAdd = 2; // Hit board or rim gets 2pt visually
+            } else {
+                // Swish extra clean goal bonus
+                sfx.playCheer();
+                scoreAdd = 3;
+                createSwishSplosion();
+            }
+
+            score += scoreAdd;
+            scoreDisplay.textContent = score;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('bball_high_score', highScore);
+                highScoreDisplay.textContent = highScore;
+            }
+
+            // Store success state
+            setSuccessHistory.push(true);
+            
+            addFloatingText(message, RIM_X_LEFT + 20, RIM_Y - 40, color);
+            triggerCanvasOverlay(message, ball.isBounced ? "백보드/림을 이용한 영리한 슈팅!" : "정확한 궤적의 클린 3점 슛!");
+        }
+
+        function checkShotTermination() {
+            // Determine if ball is fully inactive or came to rest
+            if (ball.active) {
+                // If ball rolled too far or bounced minimal height
+                if (ball.isBounced && (ball.vy === 0 || ball.y > FLOOR_Y - 15) && Math.abs(ball.vx) < 0.2) {
+                    endShotFlight();
+                }
+                // Out of bound
+                else if (ball.x < 0 || ball.x > canvas.width || ball.y > canvas.height + 50) {
+                    endShotFlight();
+                }
+            }
+        }
+
+        function endShotFlight() {
+            ball.active = false;
+            
+            // If the loop finished and didn't trigger success
+            if (setSuccessHistory.length < currentSetShotCount) {
+                setSuccessHistory.push(false);
+                addFloatingText("MISS ❌", ball.x, Math.min(ball.y - 30, FLOOR_Y - 30), "#ef4444");
+                triggerCanvasOverlay("BRICK!", "각도나 힘을 다르게 조절해 보세요.", true);
+            }
+
+            updateControlsUI();
+            
+            // Trigger final score card check on 5th shot
+            if (currentSetShotCount >= MAX_SHOTS_PER_SET) {
+                setTimeout(() => {
+                    showSetEndOverlay();
+                }, 1500);
+            } else {
+                canvasStatusText.textContent = "다음 슈팅 준비 완료!";
+            }
+        }
+
+        // ----------------------------------------------------
+        // Visual Particle & Overlay Sfx
+        // ----------------------------------------------------
+        function addFloatingText(txt, x, y, color) {
+            floatingTexts.push({
+                text: txt,
+                x: x,
+                y: y,
+                life: 60, // frames
+                color: color
+            });
+        }
+
+        function addImpactParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                ball.particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4 - 2,
+                    r: Math.random() * 3 + 1,
+                    alpha: 1,
+                    color: color
+                });
+            }
+        }
+
+        function createSwishSplosion() {
+            for (let i = 0; i < 20; i++) {
+                ball.particles.push({
+                    x: (RIM_X_LEFT + RIM_X_RIGHT) / 2 + (Math.random() - 0.5) * 20,
+                    y: RIM_Y + 10,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 1) * 4,
+                    r: Math.random() * 4 + 2,
+                    alpha: 1,
+                    color: '56, 189, 248' // Golden Blue particles
+                });
+            }
+        }
+
+        function triggerCanvasOverlay(title, subtitle, isBrick = false) {
+            overlayTitle.textContent = title;
+            overlaySub.textContent = subtitle;
+            
+            if (isBrick) {
+                overlayTitle.className = "text-3xl md:text-4xl font-extrabold text-red-500 tracking-wider transform scale-90";
+            } else {
+                overlayTitle.className = "text-4xl md:text-5xl font-extrabold text-green-400 tracking-wider transform scale-110 drop-shadow-[0_0_12px_rgba(16,185,129,0.5)]";
+            }
+
+            gameOverlay.style.opacity = '1';
+            
+            setTimeout(() => {
+                gameOverlay.style.opacity = '0';
+            }, 1200);
+        }
+
+        function showSetEndOverlay() {
+            sfx.playBuzzer();
+            const successes = setSuccessHistory.filter(x => x).length;
+            let rank = "";
+            let rankColor = "";
+
+            if (successes === 5) {
+                rank = "⚡ NBA 신인왕 레벨 ⚡";
+                rankColor = "text-yellow-400";
+            } else if (successes >= 3) {
+                rank = "🏀 훌륭한 스트리트 슈터 🏀";
+                rankColor = "text-orange-400";
+            } else {
+                rank = "💪 연습이 조금 필요한 동네 슈터 💪";
+                rankColor = "text-gray-400";
+            }
+
+            overlayTitle.innerHTML = `<span class="${rankColor}">${successes}개 성공!</span>`;
+            overlaySub.innerHTML = `
+                <div class="text-center mt-2 space-y-1">
+                    <p class="text-lg text-slate-100 font-extrabold">${rank}</p>
+                    <p class="text-xs text-gray-400">최종 점수: ${score}점</p>
+                    <button onclick="resetEntireGame()" class="mt-4 px-6 py-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl font-bold hover:scale-105 transition-all text-sm shadow-lg">새 세트 시작하기</button>
+                </div>
+            `;
+            gameOverlay.style.opacity = '1';
+            gameOverlay.style.pointerEvents = 'auto';
+            canvasStatusText.textContent = "세트 종료! 리셋하여 다시 플레이하세요.";
+        }
+
+        function resetEntireGame() {
+            score = 0;
+            currentSetShotCount = 0;
+            setSuccessHistory = [];
+            scoreDisplay.textContent = score;
+            
+            ball.active = false;
+            ball.x = shooterHand.x;
+            ball.y = shooterHand.y;
+            ball.particles = [];
+            
+            floatingTexts = [];
+            
+            gameOverlay.style.opacity = '0';
+            gameOverlay.style.pointerEvents = 'none';
+
+            canvasStatusText.textContent = "새 게임 세트 시작! 준비 완료.";
+            updateControlsUI();
+        }
+
+        // ----------------------------------------------------
+        // Canvas Rendering Module
+        // ----------------------------------------------------
+        
+        // Handles canvas resizing to match beautiful screen limits
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            scaleX = canvas.width / BASE_WIDTH;
+            scaleY = canvas.height / BASE_HEIGHT;
+        }
+
+        function drawCourt() {
+            // Draw gradient sky floor glow
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, '#020617');
+            skyGrad.addColorStop(0.7, '#0f172a');
+            skyGrad.addColorStop(1, '#1e1b4b');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Neon Floor
+            ctx.fillStyle = '#0f1016';
+            ctx.fillRect(0, FLOOR_Y * scaleY, canvas.width, canvas.height - FLOOR_Y * scaleY);
+            
+            // Floor division glow line
+            ctx.strokeStyle = '#312e81';
+            ctx.lineWidth = 4 * scaleY;
+            ctx.beginPath();
+            ctx.moveTo(0, FLOOR_Y * scaleY);
+            ctx.lineTo(canvas.width, FLOOR_Y * scaleY);
+            ctx.stroke();
+
+            // Draw Wood textures on Floor (horizontal lines)
+            ctx.strokeStyle = '#1e1b4b';
+            ctx.lineWidth = 1;
+            for (let y = FLOOR_Y + 12; y < canvas.height / scaleY; y += 15) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * scaleY);
+                ctx.lineTo(canvas.width, y * scaleY);
+                ctx.stroke();
+            }
+
+            // Draw Court Line elements (3 Point arc side-view marker)
+            ctx.strokeStyle = '#fb923c'; // Neon orange line
+            ctx.lineWidth = 3 * scaleY;
+            
+            // Draw 3-point Line indicator point
+            ctx.beginPath();
+            ctx.arc(THREE_POINT_X * scaleX, FLOOR_Y * scaleY, 8 * scaleX, 0, Math.PI, true);
+            ctx.fillStyle = '#ea580c';
+            ctx.fill();
+            ctx.stroke();
+
+            // Text tag for 3-point limit
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = `bold ${10 * scaleY}px Inter`;
+            ctx.textAlign = 'center';
+            ctx.fillText("3점슛 라인 (고정)", THREE_POINT_X * scaleX, (FLOOR_Y + 25) * scaleY);
+
+            // --- Draw Basket Backboard Support Structure ---
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 6 * scaleX;
+            ctx.beginPath();
+            ctx.moveTo(780 * scaleX, FLOOR_Y * scaleY);
+            ctx.lineTo(750 * scaleX, 180 * scaleY);
+            ctx.lineTo(BACKBOARD_X * scaleX, 180 * scaleY);
+            ctx.stroke();
+
+            // --- Draw Backboard ---
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+            ctx.strokeStyle = '#f8fafc'; // White glass border
+            ctx.lineWidth = 4 * scaleX;
+            ctx.fillRect((BACKBOARD_X - 4) * scaleX, BACKBOARD_Y_START * scaleY, 8 * scaleX, (BACKBOARD_Y_END - BACKBOARD_Y_START) * scaleY);
+            ctx.strokeRect((BACKBOARD_X - 4) * scaleX, BACKBOARD_Y_START * scaleY, 8 * scaleX, (BACKBOARD_Y_END - BACKBOARD_Y_START) * scaleY);
+
+            // Small inner square
+            ctx.strokeStyle = '#ef4444'; // Red square outline
+            ctx.lineWidth = 2 * scaleX;
+            ctx.strokeRect((BACKBOARD_X - 4) * scaleX, 175 * scaleY, 8 * scaleX, 40 * scaleY);
+
+            // --- Draw Net (Renders behind the rim) ---
+            ctx.strokeStyle = 'rgba(248, 250, 252, 0.8)'; // Net string color
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            
+            // Drawing simple diagonal cross lines for realistic basketball net look
+            ctx.beginPath();
+            ctx.moveTo(RIM_X_LEFT * scaleX, RIM_Y * scaleY);
+            ctx.lineTo((RIM_X_LEFT + 10) * scaleX, (RIM_Y + NET_DEPTH) * scaleY);
+            ctx.lineTo((RIM_X_RIGHT - 10) * scaleX, (RIM_Y + NET_DEPTH) * scaleY);
+            ctx.lineTo(RIM_X_RIGHT * scaleX, RIM_Y * scaleY);
+            
+            // Web net strings
+            for (let i = 0; i <= 4; i++) {
+                const startX = RIM_X_LEFT + (RIM_X_RIGHT - RIM_X_LEFT) * (i / 4);
+                const endX = (RIM_X_LEFT + 10) + ((RIM_X_RIGHT - 10) - (RIM_X_LEFT + 10)) * (i / 4);
+                ctx.moveTo(startX * scaleX, RIM_Y * scaleY);
+                ctx.lineTo(endX * scaleX, (RIM_Y + NET_DEPTH) * scaleY);
+            }
+            // Cross weaves
+            for (let i = 1; i < 4; i++) {
+                const h = RIM_Y + (NET_DEPTH * (i / 4));
+                const spanL = RIM_X_LEFT + (10 * (i / 4));
+                const spanR = RIM_X_RIGHT - (10 * (i / 4));
+                ctx.moveTo(spanL * scaleX, h * scaleY);
+                ctx.lineTo(spanR * scaleX, h * scaleY);
+            }
+            ctx.stroke();
+
+            // --- Draw Orange Metal Rim Ring ---
+            ctx.strokeStyle = '#f97316'; // Neon orange ring
+            ctx.lineWidth = 4 * scaleY;
+            ctx.beginPath();
+            ctx.moveTo(RIM_X_LEFT * scaleX, RIM_Y * scaleY);
+            ctx.lineTo(RIM_X_RIGHT * scaleX, RIM_Y * scaleY);
+            ctx.stroke();
+        }
+
+        // ----------------------------------------------------
+        // Rendering Dynamic Shooter Character
+        // ----------------------------------------------------
+        function drawShooter() {
+            // Joints mapped to dynamic visual properties
+            const basePlayerX = THREE_POINT_X - 20;
+            const groundY = FLOOR_Y;
+
+            // Simple vector animation state on frame calculations
+            let crouchOffset = 0;
+            let armAngle = 0;
+
+            if (ball.active) {
+                // Throw follow-through arm pose
+                crouchOffset = 0;
+                armAngle = -Math.PI / 4; 
+            } else {
+                // Aim state: crouch slightly according to selected angle/power
+                crouchOffset = 8 * (powerLevel / 5);
+                armAngle = (angle * Math.PI) / 180 * 0.4;
+            }
+
+            ctx.strokeStyle = '#cbd5e1'; // Clean slate color for avatar
+            ctx.lineWidth = 4 * scaleX;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // 1. Legs/Feet
+            ctx.beginPath();
+            // Left leg
+            ctx.moveTo(basePlayerX * scaleX, groundY * scaleY);
+            ctx.lineTo((basePlayerX + 5) * scaleX, (groundY - 30 + crouchOffset) * scaleY);
+            // Right leg
+            ctx.moveTo((basePlayerX + 15) * scaleX, groundY * scaleY);
+            ctx.lineTo((basePlayerX + 10) * scaleX, (groundY - 30 + crouchOffset) * scaleY);
+            ctx.stroke();
+
+            // 2. Spine/Torso
+            const hipsX = basePlayerX + 7;
+            const hipsY = groundY - 30 + crouchOffset;
+            const shoulderX = basePlayerX + 5;
+            const shoulderY = groundY - 75 + crouchOffset;
+
+            ctx.beginPath();
+            ctx.moveTo(hipsX * scaleX, hipsY * scaleY);
+            ctx.lineTo(shoulderX * scaleX, shoulderY * scaleY);
+            ctx.stroke();
+
+            // 3. Head
+            const headX = shoulderX + 2;
+            const headY = shoulderY - 14;
+            ctx.beginPath();
+            ctx.arc(headX * scaleX, headY * scaleY, 10 * scaleX, 0, Math.PI * 2);
+            ctx.fillStyle = '#1e293b';
+            ctx.fill();
+            ctx.stroke();
+
+            // 4. Arms & Hands holding ball
+            ctx.beginPath();
+            ctx.moveTo(shoulderX * scaleX, shoulderY * scaleY);
+            
+            if (ball.active) {
+                // Extended shoot release pose
+                const elbowX = shoulderX + 18;
+                const elbowY = shoulderY - 20;
+                const handX = shooterHand.x;
+                const handY = shooterHand.y - 10;
+
+                ctx.lineTo(elbowX * scaleX, elbowY * scaleY);
+                ctx.lineTo(handX * scaleX, handY * scaleY);
+                ctx.stroke();
+            } else {
+                // Visual arm winding matching controls
+                const elbowX = shoulderX + 10;
+                const elbowY = shoulderY + 8 - crouchOffset;
+                const handX = shooterHand.x;
+                const handY = shooterHand.y;
+
+                ctx.lineTo(elbowX * scaleX, elbowY * scaleY);
+                ctx.lineTo(handX * scaleX, handY * scaleY);
+                ctx.stroke();
+                
+                // Keep shooterHand linked visually
+                shooterHand.x = (shoulderX + 18) * scaleX;
+                shooterHand.y = (shoulderY - 10) * scaleY;
+            }
+        }
+
+        // ----------------------------------------------------
+        // Path Trajectory Simulator Preview (Guideline)
+        // ----------------------------------------------------
+        function drawTrajectoryGuide() {
+            if (!showGuideline || ball.active) return;
+
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(251, 146, 60, 0.45)'; // Ghost orange glow
+            ctx.lineWidth = 2 * scaleY;
+            ctx.setLineDash([6 * scaleX, 6 * scaleX]);
+
+            let tempX = shooterHand.x;
+            let tempY = shooterHand.y;
+            
+            const vectors = getLaunchVectors();
+            let tvx = vectors.vx * scaleX;
+            let tvy = vectors.vy * scaleY;
+            const gravityAcc = GRAVITY * scaleY;
+
+            // Simulating steps into the future
+            for (let i = 0; i < 180; i++) {
+                ctx.lineTo(tempX, tempY);
+                tempX += tvx;
+                tempY += tvy;
+                tvy += gravityAcc;
+
+                // Stop drawing if it hits floor coordinates
+                if (tempY >= FLOOR_Y * scaleY || tempX > canvas.width) {
+                    break;
+                }
+            }
+            ctx.stroke();
+            ctx.setLineDash([]); // Restore normal lines
+        }
+
+        // ----------------------------------------------------
+        // Rendering Objects, Particles, Texts
+        // ----------------------------------------------------
+        function drawBall() {
+            if (!ball.active) {
+                // Render resting inside shooter's hands pre-launch
+                const rx = shooterHand.x;
+                const ry = shooterHand.y;
+                
+                drawBasketballSpins(rx, ry, 0);
+                return;
+            }
+
+            // Draw particles first (under-layer glow)
+            ball.particles.forEach((p, idx) => {
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(${p.color}, ${p.alpha})`;
+                ctx.arc(p.x * scaleX, p.y * scaleY, p.r * scaleX, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Fade particles
+                p.alpha -= 0.02;
+                if (p.alpha <= 0) {
+                    ball.particles.splice(idx, 1);
+                }
+            });
+
+            // Draw current flying ball
+            drawBasketballSpins(ball.x * scaleX, ball.y * scaleY, ball.spin);
+        }
+
+        // Helper to draw realistic basketball seams
+        function drawBasketballSpins(x, y, spinRad) {
+            const rad = BALL_RADIUS * scaleX;
+            
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(spinRad);
+
+            // Ball base shadow
+            const ballGrad = ctx.createRadialGradient(-rad*0.2, -rad*0.2, rad*0.1, 0, 0, rad);
+            ballGrad.addColorStop(0, '#f97316'); // Bright orange
+            ballGrad.addColorStop(0.8, '#ea580c'); // Deep orange
+            ballGrad.addColorStop(1, '#9a3412'); // Dark rim shadow
+
+            ctx.beginPath();
+            ctx.arc(0, 0, rad, 0, Math.PI * 2);
+            ctx.fillStyle = ballGrad;
+            ctx.fill();
+
+            // Seam lines of standard basketball
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1.5 * scaleX;
+            
+            // Cross line
+            ctx.beginPath();
+            ctx.moveTo(-rad, 0);
+            ctx.lineTo(rad, 0);
+            ctx.moveTo(0, -rad);
+            ctx.lineTo(0, rad);
+            ctx.stroke();
+
+            // Inside circular seams
+            ctx.beginPath();
+            ctx.arc(-rad * 0.75, 0, rad * 0.65, -Math.PI / 3, Math.PI / 3);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.arc(rad * 0.75, 0, rad * 0.65, Math.PI * 2/3, Math.PI * 4/3);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawFloatingTexts() {
+            floatingTexts.forEach((ft, idx) => {
+                ctx.fillStyle = ft.color;
+                ctx.font = `black ${18 * scaleY}px 'Noto Sans KR', sans-serif`;
+                ctx.textAlign = 'center';
+                
+                // Add soft black outline
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 3;
+                ctx.strokeText(ft.text, ft.x * scaleX, ft.y * scaleY);
+                ctx.fillText(ft.text, ft.x * scaleX, ft.y * scaleY);
+
+                ft.y -= 0.5; // Float upwards
+                ft.life--;
+
+                if (ft.life <= 0) {
+                    floatingTexts.splice(idx, 1);
+                }
+            });
+        }
+
+        // ----------------------------------------------------
+        // Animation Loop Core
+        // ----------------------------------------------------
+        function animate() {
+            // Adjust to viewport resolution
+            resizeCanvas();
+
+            // Clear & Redraw layers
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawCourt();
+            drawTrajectoryGuide();
+            drawShooter();
+            checkCollisions();
+            drawBall();
+            drawFloatingTexts();
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start initialization on load
+        window.onload = function() {
+            resizeCanvas();
+            updateControlsUI();
+            
+            // Initiate core loops
+            requestAnimationFrame(animate);
+        };
+
+        // Window resize binding
+        window.addEventListener('resize', resizeCanvas);
+
+    </script>
+</body>
+</html>
